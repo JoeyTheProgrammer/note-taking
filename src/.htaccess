@@ -1,3 +1,4 @@
+#Normally utilized for pretty URLS, everthing gets redirected to index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /

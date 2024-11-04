@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connections>
+    <connection name="NOTE_APP">
+        <username>root</username>
+        <password>GENERIC_PASSWORD_FOR_TEST</password>
+        <host>192.168.18.226</host>
+        <dbname>note_taking</dbname>
+        <port>3306</port>
+    </connection>
+</connections>
+

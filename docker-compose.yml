@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: note-taking
+    volumes:
+      - /srv/noteProject/src:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: note-taking-database
+    environment:
+      MYSQL_ROOT_PASSWORD: GENERIC_PASSWORD_FOR_TEST
+      MYSQL_DATABASE: note_taking
+      MYSQL_USER: note_taking_user
+      MYSQL_PASSWORD: GENERIC_NOTE_TAKING_PASSWORD
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - /srv/noteProject/mysql:/docker-entrypoint-initdb.d
+    
+volumes:
+  mysql_data:
+

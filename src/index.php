@@ -3,6 +3,8 @@
     
     $noteView = new notesView();
 
-    echo json_encode($noteView->getHomeScreen());
-
+    $html = $noteView->getHeader();
+    $html .= $noteView->getBody();
+    $html .= $noteView->getFooter();
+    echo $html;
 ?>

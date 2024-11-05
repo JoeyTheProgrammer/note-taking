@@ -5,10 +5,16 @@
     class notesView{
 	    private $noteInstance;
         private $log;
+        private $protocol;
+        private $baseUrl;
+        private $fullUrl;
 
         public function __construct(){
 	        $this->noteInstance = new notes();
             $this->log = new log("NOTE_VIEW");
+            $this->protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+            $this->baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
+            $this->fullUrl = $this->protocol . $this->baseUrl;
         }
         
         /*
@@ -79,10 +85,10 @@
                                 <td>" . $data["note_title"] . "</td>
                                 <td>" . $truncatedDescription . "</td>
                                 <td class='text-center'>
-                                    <button class='btn btn-sm btn-secondary me-2' onclick='editNote()' data-id='" . $data["id"] . "'>
+                                    <button class='btn btn-sm btn-secondary btn-edit-note me-2' data-id='" . $data["id"] . "'>
                                         <i class='bi bi-pencil-fill'></i>
                                     </button>
-                                    <button class='btn btn-sm btn-danger' onclick='deleteNote()' data-id='" . $data["id"] . "'>
+                                    <button class='btn btn-sm btn-danger btn-delete-note' data-id='" . $data["id"] . "'>
                                         <i class='bi bi-trash-fill'></i>
                                     </button>
                                 </td>
@@ -122,11 +128,11 @@
                         <form id='addNoteForm'>
                             <div class='mb-3'>
                                 <label for='addNoteTitle' class='form-label'>Note Title</label>
-                                <input type='text' class='form-control' id='addNoteTitle' required>
+                                <input type='text' class='form-control' id='addNoteTitle' >
                             </div>
                             <div class='mb-3'>
                                 <label for='addNoteDescription' class='form-label'>Description</label>
-                                <textarea class='form-control' id='addNoteDescription' rows='3' required></textarea>
+                                <textarea class='form-control' id='addNoteDescription' rows='3' ></textarea>
                             </div>
                             <button type='submit' class='btn btn-primary'>Add Note</button>
                         </form>
@@ -150,11 +156,11 @@
                             <input type='hidden' id='editNoteId'>
                             <div class='mb-3'>
                                 <label for='editNoteTitle' class='form-label'>Note Title</label>
-                                <input type='text' class='form-control' id='editNoteTitle' required>
+                                <input type='text' class='form-control' id='editNoteTitle' >
                             </div>
                             <div class='mb-3'>
                                 <label for='editNoteDescription' class='form-label'>Description</label>
-                                <textarea class='form-control' id='editNoteDescription' rows='3' required></textarea>
+                                <textarea class='form-control' id='editNoteDescription' rows='3' ></textarea>
                             </div>
                             <button type='submit' class='btn btn-success'>Save Changes</button>
                         </form>
@@ -163,6 +169,8 @@
                 </div>
                 </div>
 
+                <!-- jQuery (required for DataTables) -->
+                <script src='https://code.jquery.com/jquery-3.6.0.min.js'></script>
                 <!-- Bootstrap JS and dependencies (Popper.js) -->
                 <script src='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'></script>
                 <!-- Bootstrap Icons -->
@@ -170,83 +178,10 @@
                 <!-- DataTables JS -->
                 <script src='https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js'></script>
                 <script src='https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js'></script>
-                <!-- jQuery (required for DataTables) -->
-                <script src='https://code.jquery.com/jquery-3.6.0.min.js'></script>
                 <!-- SweetAlert2 JS -->
                 <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-
-                <!-- Optional JavaScript for Demo Purpose -->
-                <script>
-                    // This script is for demonstration purposes.
-                    // Replace this with your own logic to manipulate notes.
-
-                    $(document).ready(function() {
-                        $('#notesTable').DataTable({
-                            responsive: true
-                        });
-                    });
-
-                    function editNote() {
-                        // Open the edit note modal
-                        $('#editNoteModal').modal('show');
-                    }
-
-                    function deleteNote() {
-                        // Show SweetAlert confirmation before deleting
-                        Swal.fire({
-                            title: 'Are you sure?',
-                            text: 'Do you really want to delete this note?',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#d33',
-                            cancelButtonColor: '#6c757d',
-                            confirmButtonText: 'Yes, delete it!',
-                            reverseButtons: true
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Perform delete action here
-                                Swal.fire(
-                                    'Deleted!',
-                                    'Your note has been deleted.',
-                                    'success'
-                                )
-                            }
-                        })
-                    }
-
-                    // Handle Add Note Form Submission
-                    $('#addNoteForm').submit(function(e) {
-                        e.preventDefault();
-                        // Get form data
-                        const title = $('#addNoteTitle').val();
-                        const description = $('#addNoteDescription').val();
-                        // Add new note to the table (this is just for demo; replace with your logic)
-                        const table = $('#notesTable').DataTable();
-                        table.row.add([
-                            title,
-                            description,
-                            `<div class='text-center'>
-                                <button class='btn btn-sm btn-secondary me-2' onclick='editNote()'>
-                                    <i class='bi bi-pencil-fill'></i>
-                                </button>
-                                <button class='btn btn-sm btn-danger' onclick='deleteNote()'>
-                                    <i class='bi bi-trash-fill'></i>
-                                </button>
-                            </div>`
-                        ]).draw(false);
-                        // Reset form and close modal
-                        $('#addNoteForm')[0].reset();
-                        $('#addNoteModal').modal('hide');
-                    });
-
-                    // Handle Edit Note Form Submission
-                    $('#editNoteForm').submit(function(e) {
-                        e.preventDefault();
-                        // Get form data and update the note (implement your logic here)
-                        $('#editNoteModal').modal('hide');
-                    });
-                </script>
-
+                <!-- Custom JS -->
+                <script src='" . $this->fullUrl . "/incs/js/custom.js?v1.0'></script>
                 </body>
                 </html>
             

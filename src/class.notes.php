@@ -150,6 +150,34 @@ session_start();
             return $this->response;
         }
         
+        //encrypt notes
+        private function encryptNoteData($plaintext, $key) {
+            $cipher = "aes-256-cbc";
+            $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher));
+
+            // Encrypt the plaintext
+            $ciphertext = openssl_encrypt($plaintext, $cipher, $key, 0, $iv);
+
+            // Encode the encrypted data and IV together for storage
+            return base64_encode($iv . $ciphertext);
+        }
+        
+        //Decrypt Notes
+        private function decryptNoteData($encryptedData, $key) {
+            $cipher = "aes-256-cbc";
+
+            // Decode from base64 and extract the IV and ciphertext
+            $decodedData = base64_decode($encryptedData);
+            $ivLength = openssl_cipher_iv_length($cipher);
+            $iv = substr($decodedData, 0, $ivLength);
+            $ciphertext = substr($decodedData, $ivLength);
+
+            // Decrypt the ciphertext
+            return openssl_decrypt($ciphertext, $cipher, $key, 0, $iv);
+        }
+
+
+        
     }
 
 

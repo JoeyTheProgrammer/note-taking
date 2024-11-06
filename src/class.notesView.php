@@ -126,6 +126,7 @@
                     <!-- Modal Body -->
                     <div class='modal-body'>
                         <form id='addNoteForm'>
+                            <input type='hidden' name='csrf_token' value='" . $csrfToken . "'>
                             <div class='mb-3'>
                                 <label for='addNoteTitle' class='form-label'>Note Title</label>
                                 <input type='text' class='form-control' id='addNoteTitle' >
@@ -153,6 +154,7 @@
                     <!-- Modal Body -->
                     <div class='modal-body'>
                         <form id='editNoteForm'>
+                            <input type='hidden' name='csrf_token' value='" . $csrfToken . "'>
                             <input type='hidden' id='editNoteId'>
                             <div class='mb-3'>
                                 <label for='editNoteTitle' class='form-label'>Note Title</label>

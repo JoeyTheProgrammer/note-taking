@@ -1,71 +1,120 @@
-$(document).ready(function(){
-    //initalize data table
-    $("#notesTable").DataTable({
-        responsive: true
+const protocol = window.location.protocol === "https:" ? "https" : "http";
+const handlerUrl = protocol + "://" + window.location.host + "/handler.php"; ;
+
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#notesTable').DataTable();
+
+    // Handle Add Note Form Submission
+    $('#addNoteForm').submit(function(e) {
+        e.preventDefault();
+        const formData = $(this).serialize();
+
+        $.ajax({
+            url: handlerUrl,
+            type: 'POST',
+            data: {data: data},
+            success: function(response) {
+                const res = JSON.parse(response);
+                console.log(res);
+                if(res.response_code === 0){
+                    // Success - reload or update the table
+                    location.reload();
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'An unexpected error occurred.', 'error');
+            }
+        });
     });
 
-    $("body").on("click", ".btn-edit-note", function() {
-        editNote();
-    });  
-   
-    function editNote(){
-        // Open the edit note modal
-        $("#editNoteModal").modal("show");
-    }
+    // Handle Edit Note Button Click
+    $('.btn-edit-note').click(function() {
+        const noteId = $(this).data('id');
 
-    function deleteNote(){
-        // Show SweetAlert confirmation before deleting
-        Swal.fire({
-            title: "Are you sure?",
-            text: "Do you really want to delete this note?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#6c757d",
-            confirmButtonText: "Yes, delete it!",
-            reverseButtons: true
-        }).then((result) => {
-            if(result.isConfirmed){
-                // Perform delete action here
-                Swal.fire(
-                    "Deleted!",
-                    "Your note has been deleted.",
-                    "success"
-                )
+        $.ajax({
+            url: handlerUrl,
+            type: 'POST',
+            data: { action : "P1000" },
+            success: function(response) {
+                const res = JSON.parse(response);
+                console.log(res);
+                if(res.response_code === 0){
+                    $('#editNoteId').val(res.note_data.id);
+                    $('#editNoteTitle').val(res.note_data.note_title);
+                    $('#editNoteDescription').val(res.note_data.description);
+                    $('#editNoteModal').modal('show');
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'An unexpected error occurred.', 'error');
             }
-        })
-    }
-    
-    // Handle Add Note Form Submission
-    $("#addNoteForm").submit(function(e) {
-        e.preventDefault();
-        // Get form data
-        const title = $("#addNoteTitle").val();
-        const description = $("#addNoteDescription").val();
-        // Add new note to the table (this is just for demo; replace with your logic)
-        const table = $("#notesTable").DataTable();
-        table.row.add([
-            title,
-            description,
-            `<div class="text-center">
-                <button class="btn btn-sm btn-secondary me-2" onclick="editNote()">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteNote()">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-            </div>`
-        ]).draw(false);
-        // Reset form and close modal
-        $("#addNoteForm")[0].reset();
-        $("#addNoteModal").modal("hide");
+        });
     });
 
     // Handle Edit Note Form Submission
-    $("#editNoteForm").submit(function(e) {
+    $('#editNoteForm').submit(function(e) {
         e.preventDefault();
-        // Get form data and update the note (implement your logic here)
-        $("#editNoteModal").modal("hide");
+        const formData = $(this).serialize();
+
+        $.ajax({
+            url: handler.php,
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                const res = JSON.parse(response);
+                if(res.response_code === 0){
+                    // Success - reload or update the table
+                    location.reload();
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'An unexpected error occurred.', 'error');
+            }
+        });
     });
- 
+
+    // Handle Delete Note Button Click
+    $('.btn-delete-note').click(function() {
+        const noteId = $(this).data('id');
+        const csrfToken = $('input[name="csrf_token"]').val();
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you really want to delete this note?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: handlerUrl,
+                    type: 'POST',
+                    data: { id: noteId, csrf_token: csrfToken },
+                    success: function(response) {
+                        const res = JSON.parse(response);
+                        if(res.response_code === 0){
+                            // Success - reload or update the table
+                            location.reload();
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'An unexpected error occurred.', 'error');
+                    }
+                });
+            }
+        })
+    });
 });
+

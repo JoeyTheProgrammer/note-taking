@@ -1,12 +1,15 @@
 <?php
 session_start();    
     include_once(__DIR__ . "/database.php");
+    include_once(__DIR__ . "/encryption.php");
+    
     class notes{
         private $db;
         private $response;
         private $log;
         private $defaultErrorMessage;
         private $userId;
+        private $encryptionInstance;
 
         public function __construct(){
             //Since this is a demo, alot of these would change... (I wouldnt hard code this...)
@@ -24,6 +27,7 @@ session_start();
             $this->response["message"] = "Clear";
             $this->log = new log("NOTE_APP");
             $this->defaultErrorMessage = "Oops, something went wrong, try again or contact your system admin.";
+            $this->encryptionInstance = new encryption();
         }
        
         /* 
@@ -198,9 +202,9 @@ session_start();
                 return $this->response;
             }
 
-            $noteId = isset($params["note_id"]) ? $params["note_id"] : NULL ;
+            $noteId = isset($params["note_id"]) ? $this->encryptionInstance->decrypt($params["note_id"]) : NULL ;
             
-            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1 AND id = $noteId";
+            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1 AND id = " . $noteId["decrypted_data"];
             $sqlResponse = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
@@ -249,7 +253,7 @@ session_start();
                 return $this->response;
             }
 
-            $noteId = isset($params["id"]) ? intval($params["id"]) : null;
+            $noteId = isset($params["id"]) ? $this->encryptionInstance->decrypt($params["id"]) : null;
             $noteTitle = isset($params["note_title"]) ? trim($params["note_title"]) : null;
             $description = isset($params["description"]) ? trim($params["description"]) : null;
             if(!$noteId || !$noteTitle || !$description){
@@ -258,7 +262,7 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "SELECT * FROM notes WHERE id = " . $noteId . " AND user_id = " . $this->userId . " AND status = 1";
+            $sql = "SELECT * FROM notes WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId . " AND status = 1";
             $sqlResponse = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
@@ -274,7 +278,7 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "UPDATE notes SET note_title = '" . $noteTitle . "', description = '" . $description . "', updated_by = " . $this->userId . " WHERE id = " . $noteId . " AND user_id = " . $this->userId . "";
+            $sql = "UPDATE notes SET note_title = '" . $noteTitle . "', description = '" . $description . "', updated_by = " . $this->userId . " WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId . "";
 
             $sql = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
@@ -284,7 +288,7 @@ session_start();
                 return $this->response;
             }
 
-            $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " has successfully updated note with id: $noteId");
+            $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " has successfully updated note with id:" . $noteId["decrypted_data"]);
             return $this->response;
         }
  
@@ -318,7 +322,7 @@ session_start();
                 return $this->response;
             }
 
-            $noteId = isset($params["id"]) ? intval($params["id"]) : null;
+            $noteId = isset($params["id"]) ? $this->encryptionInstance->decrypt($params["id"]) : null;
 
             if(!$noteId){
                 $this->response["response_code"] = -1;
@@ -326,7 +330,7 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "SELECT * FROM notes WHERE id = " . $noteId . " AND user_id = " . $this->userId . " AND status = 1";
+            $sql = "SELECT * FROM notes WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId . " AND status = 1";
             $sqlResponse = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
@@ -343,7 +347,7 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "UPDATE notes SET status = 0, updated_by = " . $this->userId . " WHERE id = " . $noteId . " AND user_id = " . $this->userId;
+            $sql = "UPDATE notes SET status = 0, updated_by = " . $this->userId . " WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId;
 
             $stmt = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
@@ -353,39 +357,9 @@ session_start();
                 return $this->response;
             }
 
-            $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " has successfully deleted note with id: $noteId");
+            $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " has successfully deleted note with id:" . $noteId["decrypted_data"]);
             return $this->response;
         }
-        
-
-        //encrypt notes
-        private function encryptNoteData($plaintext, $key) {
-            $cipher = "aes-256-cbc";
-            $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length($cipher));
-
-            // Encrypt the plaintext
-            $ciphertext = openssl_encrypt($plaintext, $cipher, $key, 0, $iv);
-
-            // Encode the encrypted data and IV together for storage
-            return base64_encode($iv . $ciphertext);
-        }
-        
-        //Decrypt Notes
-        private function decryptNoteData($encryptedData, $key) {
-            $cipher = "aes-256-cbc";
-
-            // Decode from base64 and extract the IV and ciphertext
-            $decodedData = base64_decode($encryptedData);
-            $ivLength = openssl_cipher_iv_length($cipher);
-            $iv = substr($decodedData, 0, $ivLength);
-            $ciphertext = substr($decodedData, $ivLength);
-
-            // Decrypt the ciphertext
-            return openssl_decrypt($ciphertext, $cipher, $key, 0, $iv);
-        }
-
-
-        
     }
 
 

@@ -7,3 +7,13 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
+<Files "connections.xml">
+    Order allow,deny
+    Deny from all
+</Files>
+
+
+<Files "encryption.xml">
+    Order allow,deny
+    Deny from all
+</Files>

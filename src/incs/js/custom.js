@@ -44,6 +44,7 @@ $(document).ready(function() {
                 console.log(res);
                 if(res.response_code === 0){
                     Swal.fire('Success', 'Successfully added new note!', 'success');
+                    
                     // notesTable.clear();
                     // res.notes.forEach(note => {
                     //     notesTable.row.add([
@@ -208,7 +209,9 @@ $(document).ready(function() {
         }
     });
 
-    // Handle Delete Note Button Click
+    /**
+     *  Deletes Note
+     * */ 
     $('.btn-delete-note').click(function() {
         const noteId = $(this).data('id');
         let token = $("#csrfToken");
@@ -249,5 +252,7 @@ $(document).ready(function() {
             }
         })
     });
+
+
 });
 

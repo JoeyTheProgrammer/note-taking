@@ -1,6 +1,7 @@
 <?php
     include_once(__DIR__ . "/class.notes.php");
     include_once(__DIR__ . "/logger.php");
+    include_once(__DIR__ . "/encryption.php");
 
     class notesView{
 	    private $noteInstance;
@@ -8,6 +9,7 @@
         private $protocol;
         private $baseUrl;
         private $fullUrl;
+        private $encryptionInstance;
 
         public function __construct(){
 	        $this->noteInstance = new notes();
@@ -15,6 +17,7 @@
             $this->protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
             $this->baseUrl = $protocol . "://" . $_SERVER['HTTP_HOST'];
             $this->fullUrl = $this->protocol . $this->baseUrl;
+            $this->encryptionInstance = new encryption();
         }
         
         /*
@@ -79,16 +82,17 @@
                 }else{
                     foreach($noteData as $data){
                         $truncatedDescription = substr($data["description"], 0, 15) . (strlen($data["description"]) > 15 ? '...' : '');
+                        $encryptedId = $this->encryptionInstance->encrypt($data["id"]);//not sure whats the best approach for a fallback here
                         
                         $built_body .= "
                             <tr>
                                 <td>" . $data["note_title"] . "</td>
                                 <td>" . $truncatedDescription . "</td>
                                 <td class='text-center'>
-                                    <button class='btn btn-sm btn-secondary btn-edit-note me-2' data-id='" . $data["id"] . "'>
+                                    <button class='btn btn-sm btn-secondary btn-edit-note me-2' data-id='" . $encryptedId["encrypted_data"] . "'>
                                         <i class='bi bi-pencil-fill'></i>
                                     </button>
-                                    <button class='btn btn-sm btn-danger btn-delete-note' data-id='" . $data["id"] . "'>
+                                    <button class='btn btn-sm btn-danger btn-delete-note' data-id='" . $encryptedId["encrypted_data"] . "'>
                                         <i class='bi bi-trash-fill'></i>
                                     </button>
                                 </td>

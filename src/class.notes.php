@@ -140,7 +140,9 @@ session_start();
             return $this->response;
         }
             
-        //Read
+        /**
+         *  Read All Notes
+        */
         public function getAllNotes(){
             $this->log->activity("<" . __FUNCTION__ . "> in line: " . __LINE__ . " " . $_SESSION["user_name"] . " is attempting to get all notes");
            
@@ -174,14 +176,59 @@ session_start();
             $this->log->activity("<" . __FUNCTION__ . "> in line: " . __LINE__ . " " . $_SESSION["user_name"]  . " has retrieved all notes"); 
             return $this->response;
         }
+
+        /**
+         *  Read Single Notes
+        */
+        public function getSingleNote($params){
+            $this->log->activity("<" . __FUNCTION__ . "> in line: " . __LINE__ . " " . $_SESSION["user_name"] . " is attempting to a single notes");
+           
+            if($this->db->getResponseCode() != 0){
+                $this->log->error("<" . __FUNCTION__ . "> in line: " . __LINE__ . " Unable to connect to database, error: " . json_encode($this->db->getFullResponse()));
+                $this->response["response_code"] = -1;
+                $this->response["message"] = $this->defaultErrorMessage;
+                return $this->response;
+            }
+            
+            $verifyUser = $this->validateUser();
+            if($verifyUser["response_code"] != 0){
+                $this->log->error("<" . __FUNCTION__ . "> in line: " . __LINE__ . " Something went wrong while validating user, response: " . json_encode($verifyUser));
+                $this->response["response_code"] = -1;
+                $this->response["message"] = $this->defaultErrorMessage;
+                return $this->response;
+            }
+
+            $noteId = isset($params["note_id"]) ? $params["note_id"] : NULL ;
+            
+            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1 AND id = $noteId";
+            $sqlResponse = $this->db->execute($sql);
+            if($this->db->getResponseCode() != 0){
+                $this->response["response_code"] = -1;
+                $this->response["message"] = $this->defaultErrorMessage;
+                $this->log->error("<" . __FUNCTION__ . "> in line: " . __LINE__ . " something went wrong while executing the query: \n" . $sql . "\n response: " . json_encode($this->db->getFullResponse));
+                return $this->response;
+            }
+
+            $rows = $this->db->fetch($sql);
+            $this->response["note_data"] = isset($rows) ? $rows : NULL;
+           
+            $this->log->activity("<" . __FUNCTION__ . "> in line: " . __LINE__ . " " . $_SESSION["user_name"]  . " has retrieved a single note"); 
+            return $this->response;
+        }
         
+        /**
+         *  Update Notes
+        */
         public function updateNote($params){
             $this->response["response_code"] = 0;
             $this->response["message"] = "Clear";
             $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " is attempting to update a note");
 
-            $validateToken = $this->validateCsrfToken($params["csrf_token"]);
+            $csrfToken = isset($params["csrf_token"]) ? $params["csrf_token"] : NULL;
+
+            $validateToken = $this->validateCsrfToken($csrfToken);
             if($validateToken["response_code"] != 0){
+                $this->log->error("<" . __FUNCTION__ . "> Unable to validate CSRF token");
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Invalid CSRF token.";
                 return $this->response;
@@ -205,7 +252,6 @@ session_start();
             $noteId = isset($params["id"]) ? intval($params["id"]) : null;
             $noteTitle = isset($params["note_title"]) ? trim($params["note_title"]) : null;
             $description = isset($params["description"]) ? trim($params["description"]) : null;
-
             if(!$noteId || !$noteTitle || !$description){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Note ID, title, and description cannot be empty.";
@@ -221,15 +267,14 @@ session_start();
                 return $this->response;
             }
 
-            $rows = $this->db->fetchAll($sql);
-
-            if(!$noteExists){
+            $row = $this->db->fetch($sql);
+            if(empty($row)){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Note not found or you don't have permission to edit this note.";
                 return $this->response;
             }
 
-            $sql = "UPDATE notes SET note_title = " . $noteTitle . ", description = " . $description . ", updated_by = " . $this->userId . " WHERE id = " . $noteId . " AND user_id = " . $this->userId . "";
+            $sql = "UPDATE notes SET note_title = '" . $noteTitle . "', description = '" . $description . "', updated_by = " . $this->userId . " WHERE id = " . $noteId . " AND user_id = " . $this->userId . "";
 
             $sql = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
@@ -243,7 +288,9 @@ session_start();
             return $this->response;
         }
  
-        // Delete
+        /**
+         *  Delete Note
+         */
         public function deleteNote($params){
             $this->response["response_code"] = 0;
             $this->response["message"] = "Clear";
@@ -296,7 +343,7 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "UPDATE notes SET status = 0, updated_by = " . $this->userId . " WHERE id = " . $noteId . " AND user_id = " . $this->user_id;
+            $sql = "UPDATE notes SET status = 0, updated_by = " . $this->userId . " WHERE id = " . $noteId . " AND user_id = " . $this->userId;
 
             $stmt = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){

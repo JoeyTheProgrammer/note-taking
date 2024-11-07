@@ -15,15 +15,19 @@ Switch($action){
     break;
     case "P1001":
         $noteInstance = new notes();
-        $response = $noteInstance->addNote($request);
+        $response = $noteInstance->getSingleNote($request);
     break;
     case "P1002":
         $noteInstance = new notes();
-        $response = $noteInstance->updateNote($request);
+        $response = $noteInstance->addNote($request);
     break;
     case "P1003":
         $noteInstance = new notes();
-        $response = $noteInstance->deleteNote();
+        $response = $noteInstance->updateNote($request);
+    break;
+    case "P1004":
+        $noteInstance = new notes();
+        $response = $noteInstance->deleteNote($request);
     break;
     default:
         $response["response_code"] = -1;

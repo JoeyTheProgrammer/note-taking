@@ -13,6 +13,18 @@ Switch($action){
         $noteInstance = new notes();
         $response = $noteInstance->getAllNotes();
     break;
+    case "P1001":
+        $noteInstance = new notes();
+        $response = $noteInstance->addNote($request);
+    break;
+    case "P1002":
+        $noteInstance = new notes();
+        $response = $noteInstance->updateNote($request);
+    break;
+    case "P1003":
+        $noteInstance = new notes();
+        $response = $noteInstance->deleteNote();
+    break;
     default:
         $response["response_code"] = -1;
         $response["message"] = "Something went wrong, kindly contact your system admin for further assistance"; 

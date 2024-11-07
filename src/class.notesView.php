@@ -73,7 +73,7 @@
                 $built_body .= "<tr><td class='text-center' colspan=3>Something went wrong, try again or contact your system admin</td></tr>";
             }else{
                 $noteData = isset($getNotes["note_data"]) ? $getNotes["note_data"] : NULL ;
-                
+
                 if(!$noteData){
                     $built_body .= "<tr><td class='text-center' colspan=3>Oh no.. it seems you have no notes yet!</td></tr>";
                 }else{
@@ -124,20 +124,18 @@
                             <button type='button' class='btn-close' data-bs-dismiss='modal' aria-label='Close'></button>
                         </div>
                     <!-- Modal Body -->
-                    <div class='modal-body'>
-                        <form id='addNoteForm'>
-                            <input type='hidden' name='csrf_token' value='" . $csrfToken . "'>
+                        <div class='modal-body'>
+                            <input id='csrfToken' type='hidden' value='" . $_SESSION["csrf_token"] . "'>
                             <div class='mb-3'>
                                 <label for='addNoteTitle' class='form-label'>Note Title</label>
-                                <input type='text' class='form-control' id='addNoteTitle' >
+                                <input id='addNoteTitle' type='text' class='form-control'>
                             </div>
                             <div class='mb-3'>
                                 <label for='addNoteDescription' class='form-label'>Description</label>
-                                <textarea class='form-control' id='addNoteDescription' rows='3' ></textarea>
+                                <textarea id='addNoteDescription' class='form-control' rows='3' ></textarea>
                             </div>
-                            <button type='submit' class='btn btn-primary'>Add Note</button>
-                        </form>
-                    </div>
+                            <button id= 'btnAddNote' type='submit' class='btn btn-primary'>Add Note</button>
+                        </div>
                     </div>
                 </div>
                 </div>
@@ -153,19 +151,17 @@
                         </div>
                     <!-- Modal Body -->
                     <div class='modal-body'>
-                        <form id='editNoteForm'>
-                            <input type='hidden' name='csrf_token' value='" . $csrfToken . "'>
-                            <input type='hidden' id='editNoteId'>
-                            <div class='mb-3'>
-                                <label for='editNoteTitle' class='form-label'>Note Title</label>
-                                <input type='text' class='form-control' id='editNoteTitle' >
-                            </div>
-                            <div class='mb-3'>
-                                <label for='editNoteDescription' class='form-label'>Description</label>
-                                <textarea class='form-control' id='editNoteDescription' rows='3' ></textarea>
-                            </div>
-                            <button type='submit' class='btn btn-success'>Save Changes</button>
-                        </form>
+                        <input id='csrfToken' type='hidden' value='" . $_SESSION["csrf_token"] . "'>
+                        <input type='hidden' id='editNoteId'>
+                        <div class='mb-3'>
+                            <label for='editNoteTitle' class='form-label'>Note Title</label>
+                            <input id='editNoteTitle' type='text' class='form-control' >
+                        </div>
+                        <div class='mb-3'>
+                            <label for='editNoteDescription' class='form-label'>Description</label>
+                            <textarea id='editNoteDescription' class='form-control' rows='3' ></textarea>
+                        </div>
+                        <button id='btnSaveChanges' type='submit' class='btn btn-success'>Save Changes</button>
                     </div>
                     </div>
                 </div>

@@ -10,7 +10,7 @@ session_start();
 
         public function __construct(){
             //Since this is a demo, alot of these would change... (I wouldnt hard code this...)
-            if(!isset($_SESSION['user_id'])){
+            if(!isset($_SESSION["user_id"])){
                 $_SESSION["user_name"] = "acowo";
                 $_SESSION["user_id"] = uniqid("user_acowo");
                 $_SESSION["session_start_time"] = time();
@@ -39,7 +39,7 @@ session_start();
         public function validateCsrfToken($token){
             if(!hash_equals($_SESSION["csrf_token"], $token)){
                 $this->response["response_code"] = -1; 
-                $this->response["message"] = "Unable to connect to database";
+                $this->response["message"] = "Unable to verify Csrf token";
                 return $this->response;
             }
         } 
@@ -90,10 +90,12 @@ session_start();
         // Create
         public function addNote($params){
             $this->response["response_code"] = 0;
-            $this->response["message"] = "Clear";
+            $this->response["message"] = "Note Successfully added!";
             $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " is attempting to add new note");
 
-            $validateToken = $this->validateCsrfToken($params['csrf_token']);
+            $csrfToken = isset($params["csrf_token"]) ? $params["csrf_token"] : NULL;
+
+            $validateToken = $this->validateCsrfToken($csrfToken);
             if($validateToken["response_code"] != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Invalid CSRF token.";
@@ -115,8 +117,8 @@ session_start();
                 return $this->response;
             }
 
-            $noteTitle = isset($params['note_title']) ? trim($params['note_title']) : null;
-            $description = isset($params['description']) ? trim($params['description']) : null;
+            $noteTitle = isset($params["note_title"]) ? trim($params["note_title"]) : null;
+            $description = isset($params["description"]) ? trim($params["description"]) : null;
 
             if(!$noteTitle || !$description){
                 $this->response["response_code"] = -1;
@@ -133,6 +135,7 @@ session_start();
                 return $this->response;
             }
 
+            $this->response["notes"] = $this->getAllNotes();
             $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " has successfully added note");
             return $this->response;
         }
@@ -156,7 +159,7 @@ session_start();
                 return $this->response;
             }
             
-            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1";
+            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1 ORDER BY ID ASC";
             $sqlResponse = $this->db->execute($sql);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
@@ -177,7 +180,7 @@ session_start();
             $this->response["message"] = "Clear";
             $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " is attempting to update a note");
 
-            $validateToken = $this->validateCsrfToken($params['csrf_token']);
+            $validateToken = $this->validateCsrfToken($params["csrf_token"]);
             if($validateToken["response_code"] != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Invalid CSRF token.";
@@ -199,9 +202,9 @@ session_start();
                 return $this->response;
             }
 
-            $noteId = isset($params['id']) ? intval($params['id']) : null;
-            $noteTitle = isset($params['note_title']) ? trim($params['note_title']) : null;
-            $description = isset($params['description']) ? trim($params['description']) : null;
+            $noteId = isset($params["id"]) ? intval($params["id"]) : null;
+            $noteTitle = isset($params["note_title"]) ? trim($params["note_title"]) : null;
+            $description = isset($params["description"]) ? trim($params["description"]) : null;
 
             if(!$noteId || !$noteTitle || !$description){
                 $this->response["response_code"] = -1;
@@ -246,7 +249,7 @@ session_start();
             $this->response["message"] = "Clear";
             $this->log->activity("<" . __FUNCTION__ . "> " . $_SESSION["user_name"] . " is attempting to delete note");
 
-            $validateToken = $this->validateCsrfToken($params['csrf_token']);
+            $validateToken = $this->validateCsrfToken($params["csrf_token"]);
             if($validateToken["response_code"] != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Invalid CSRF token.";
@@ -268,7 +271,7 @@ session_start();
                 return $this->response;
             }
 
-            $noteId = isset($params['id']) ? intval($params['id']) : null;
+            $noteId = isset($params["id"]) ? intval($params["id"]) : null;
 
             if(!$noteId){
                 $this->response["response_code"] = -1;

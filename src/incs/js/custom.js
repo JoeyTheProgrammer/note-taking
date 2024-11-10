@@ -10,7 +10,15 @@ $(document).ready(function() {
             data: { 
                 action: "P1000"
             },
-            dataSrc: "datatable_data"
+            // dataSrc: "datatable_data",
+            dataSrc: function(json){
+                if (json && json.datatable_data && json.datatable_data.length > 0) {
+                    return json.datatable_data;
+                } else {
+                    $('#notesTable tbody').html('<tr><td colspan="3" class="text-center">No data available</td></tr>');
+                    return []; 
+                }
+            }
         },
         columns: [
             {data:'note_title'},
@@ -96,7 +104,7 @@ $(document).ready(function() {
 
         if (!addNoteDescription.val().trim()) {
             addNoteDescription.addClass('is-invalid');
-            addNoteDescription.after('<div class="invalid-feedback">Please enter a title.</div>');
+            addNoteDescription.after('<div class="invalid-feedback">Please enter a Description.</div>');
         }
     });
 
@@ -205,7 +213,7 @@ $(document).ready(function() {
 
         if (!editNoteDescription.val().trim()) {
             editNoteDescription.addClass('is-invalid');
-            editNoteDescription.after('<div class="invalid-feedback">Please enter a title.</div>');
+            editNoteDescription.after('<div class="invalid-feedback">Please enter a Description.</div>');
         }
     });
 

@@ -176,6 +176,26 @@ session_start();
 
             $rows = $this->db->fetchAll($sql);
             $this->response["note_data"] = isset($rows) ? $rows : NULL;
+
+            $this->response["datatable_data"] = array();
+            foreach($rows as $row){
+                $encryptedId = $this->encryptionInstance->encrypt($row["id"]);
+                array_push($this->response["datatable_data"], array(
+                    "note_title" => $row["note_title"], 
+                    "description" => $row["description"], 
+                    "actions" =>
+                        "
+                            <div class='text-center'>
+                                <button class='btn btn-sm btn-secondary btn-edit-note me-2' data-id='" . $encryptedId["encrypted_data"] . "'>
+                                    <i class='bi bi-pencil-fill'></i>
+                                </button>
+                                <button class='btn btn-sm btn-danger btn-delete-note' data-id='" . $encryptedId["encrypted_data"] . "'>
+                                    <i class='bi bi-trash-fill'></i>
+                                </button>
+                            </div>
+                        "
+                ));
+            }
            
             $this->log->activity("<" . __FUNCTION__ . "> in line: " . __LINE__ . " " . $_SESSION["user_name"]  . " has retrieved all notes"); 
             return $this->response;

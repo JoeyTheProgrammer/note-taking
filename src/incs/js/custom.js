@@ -3,7 +3,22 @@ const handlerUrl = protocol + "://" + window.location.host + "/handler.php"; ;
 
 $(document).ready(function() {
     // Initialize DataTable
-    let notesTable = $('#notesTable').DataTable();
+    let notesTable = $('#notesTable').DataTable({
+        ajax: {
+            url: handlerUrl,
+            type: 'POST',
+            data: { 
+                action: "P1000"
+            },
+            dataSrc: "datatable_data"
+        },
+        columns: [
+            {data:'note_title'},
+            {data:'description'},
+            {data:'actions'}
+        ]
+        
+    });
 
     /*
     *   Add new note 
@@ -41,21 +56,13 @@ $(document).ready(function() {
              },
             success: function(response) {
                 const res = JSON.parse(response);
-                console.log(res);
+                // console.log(res);
                 if(res.response_code === 0){
                     Swal.fire('Success', 'Successfully added new note!', 'success');
-                    
-                    // notesTable.clear();
-                    // res.notes.forEach(note => {
-                    //     notesTable.row.add([
-                    //         note.title,
-                    //         note.description,
-                    //         note.date_created,
-                    //         // Add other fields if needed
-                    //     ]).draw();
-                    // });
+                    $('#addNoteModal').modal('hide');
                     addNoteTitle.val("");
                     addNoteDescription.val("");
+                    notesTable.ajax.reload(null, false);
                 } else {
                     Swal.fire('Error', 'Oops, something went wrong, kindly try again or contact your system admin', 'error');
                 }
@@ -96,7 +103,7 @@ $(document).ready(function() {
     /*
     *   Edit Note Js
     */ 
-    $('.btn-edit-note').click(function() {
+    $("body").on("click", ".btn-edit-note", (function() {
         const noteId = $(this).data('id');
         let token = $("#csrfToken");
         
@@ -125,7 +132,7 @@ $(document).ready(function() {
                 Swal.fire('Error', 'An unexpected error occurred.', 'error');
             }
         });
-    });
+    }));
 
      $('#btnSaveChanges').click(function() {
         let token = $("#csrfToken");
@@ -161,20 +168,13 @@ $(document).ready(function() {
              },
             success: function(response) {
                 const res = JSON.parse(response);
-                console.log(res);
+                // console.log(res);
                 if(res.response_code === 0){
                     Swal.fire('Success', 'Successfully edited note!', 'success');
-                    // notesTable.clear();
-                    // res.notes.forEach(note => {
-                    //     notesTable.row.add([
-                    //         note.title,
-                    //         note.description,
-                    //         note.date_created,
-                    //         // Add other fields if needed
-                    //     ]).draw();
-                    // });
+                    $('#editNoteModal').modal('hide');
                     editNoteTitle.val("");
                     editNoteDescription.val("");
+                    notesTable.ajax.reload(null, false);
                 } else {
                     Swal.fire('Error', 'Oops, something went wrong, kindly try again or contact your system admin', 'error');
                 }
@@ -212,7 +212,7 @@ $(document).ready(function() {
     /**
      *  Deletes Note
      * */ 
-    $('.btn-delete-note').click(function() {
+    $('body').on("click", ".btn-delete-note", (function() {
         const noteId = $(this).data('id');
         let token = $("#csrfToken");
 
@@ -239,8 +239,7 @@ $(document).ready(function() {
                         const res = JSON.parse(response);
                         if(res.response_code === 0){
                             Swal.fire('Success', 'Successfully Deleted a note', 'success');
-                            // Success - reload or update the table
-                            // location.reload();
+                            notesTable.ajax.reload(null, false);
                         } else {
                             Swal.fire('Error', res.message, 'error');
                         }
@@ -251,7 +250,7 @@ $(document).ready(function() {
                 });
             }
         })
-    });
+    }));
 
 
 });

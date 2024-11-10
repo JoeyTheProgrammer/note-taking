@@ -78,11 +78,12 @@
                 $noteData = isset($getNotes["note_data"]) ? $getNotes["note_data"] : NULL ;
 
                 if(!$noteData){
-                    $built_body .= "<tr><td class='text-center' colspan=3>Oh no.. it seems you have no notes yet!</td></tr>";
+                    // Normally something like this would be displayed as a failsafe if datatables were not used
+                    // $built_body .= "<tr><td class='text-center' colspan=3>Oh no.. it seems you have no notes yet!</td></tr>";
                 }else{
                     foreach($noteData as $data){
                         $truncatedDescription = substr($data["description"], 0, 15) . (strlen($data["description"]) > 15 ? '...' : '');
-                        $encryptedId = $this->encryptionInstance->encrypt($data["id"]);//not sure whats the best approach for a fallback here
+                        $encryptedId = $this->encryptionInstance->encrypt($data["id"]);
                         
                         $built_body .= "
                             <tr>

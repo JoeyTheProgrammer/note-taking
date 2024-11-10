@@ -63,8 +63,9 @@ session_start();
                 return $this->response;
             }
             
-            $sql = "SELECT * FROM users WHERE user_name = '" . trim($_SESSION["user_name"]) . "' AND status = 1";
-            $sqlResponse = $this->db->execute($sql);
+            $sql = "SELECT * FROM users WHERE user_name = :user_name AND status = 1";
+            $sqlParams =[":user_name" => trim($_SESSION["user_name"])] ;
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -72,7 +73,7 @@ session_start();
                 return $this->response;
             }
 
-            $rows = $this->db->fetch($sql);
+            $rows = $this->db->fetch($sql, $sqlParams);
             if(!$rows){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -130,8 +131,14 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "INSERT INTO notes (user_id, note_title, description, created_by) VALUES (" . $this->userId . ", '" . $noteTitle . "', '" . $description . "', " . $this->userId . ")";
-            $sqlResponse = $this->db->execute($sql);
+            $sql = "INSERT INTO notes (user_id, note_title, description, created_by) VALUES (:user_id, :note_title, :description, :created_by)";
+            $sqlParams = [
+                ":user_id" => $this->userId, 
+                ":note_title" => $noteTitle, 
+                ":description" => $description, 
+                ":created_by" => $this->userId
+            ];
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -165,8 +172,11 @@ session_start();
                 return $this->response;
             }
             
-            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1 ORDER BY ID ASC";
-            $sqlResponse = $this->db->execute($sql);
+            $sql = "SELECT * FROM notes WHERE created_by = :user_id AND status = 1 ORDER BY ID ASC";
+            $sqlParams = [
+                ":user_id" => $this->userId
+            ];
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -174,15 +184,16 @@ session_start();
                 return $this->response;
             }
 
-            $rows = $this->db->fetchAll($sql);
+            $rows = $this->db->fetchAll($sql, $sqlParams);
             $this->response["note_data"] = isset($rows) ? $rows : NULL;
 
             $this->response["datatable_data"] = array();
             foreach($rows as $row){
+                $truncatedDescription = substr($row["description"], 0, 15) . (strlen($row["description"]) > 15 ? '...' : '');
                 $encryptedId = $this->encryptionInstance->encrypt($row["id"]);
                 array_push($this->response["datatable_data"], array(
                     "note_title" => $row["note_title"], 
-                    "description" => $row["description"], 
+                    "description" => $truncatedDescription, 
                     "actions" =>
                         "
                             <div class='text-center'>
@@ -224,8 +235,13 @@ session_start();
 
             $noteId = isset($params["note_id"]) ? $this->encryptionInstance->decrypt($params["note_id"]) : NULL ;
             
-            $sql = "SELECT * FROM notes WHERE created_by = " . $this->userId . " AND status = 1 AND id = " . $noteId["decrypted_data"];
-            $sqlResponse = $this->db->execute($sql);
+            $sql = "SELECT * FROM notes WHERE created_by = :user_id AND status = 1 AND id = :note_id";
+            $sqlParams = [
+                ":user_id" => $this->userId,
+                ":note_id" => $noteId["decrypted_data"]
+
+            ];
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -233,7 +249,7 @@ session_start();
                 return $this->response;
             }
 
-            $rows = $this->db->fetch($sql);
+            $rows = $this->db->fetch($sql, $sqlParams);
             $this->response["note_data"] = isset($rows) ? $rows : NULL;
            
             $this->log->activity("<" . __FUNCTION__ . "> in line: " . __LINE__ . " " . $_SESSION["user_name"]  . " has retrieved a single note"); 
@@ -282,8 +298,12 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "SELECT * FROM notes WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId . " AND status = 1";
-            $sqlResponse = $this->db->execute($sql);
+            $sql = "SELECT * FROM notes WHERE id = :note_id AND user_id = :user_id AND status = 1";
+            $sqlParams = [
+                ":note_id" => $noteId["decrypted_data"],
+                ":user_id" => $this->userId
+            ];
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -291,16 +311,22 @@ session_start();
                 return $this->response;
             }
 
-            $row = $this->db->fetch($sql);
+            $row = $this->db->fetch($sql, $sqlParams);
             if(empty($row)){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = "Note not found or you don't have permission to edit this note.";
                 return $this->response;
             }
 
-            $sql = "UPDATE notes SET note_title = '" . $noteTitle . "', description = '" . $description . "', updated_by = " . $this->userId . " WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId . "";
+            $sql = "UPDATE notes SET note_title = :note_title , description = :description, updated_by = :user_id WHERE id = :note_id AND user_id = " . $this->userId . "";
+            $sqlParams = [
+                ":note_title" => $noteTitle,
+                ":description" => $description,
+                ":user_id" => $this->userId,
+                ":note_id" => $noteId["decrypted_data"]
+            ];
 
-            $sql = $this->db->execute($sql);
+            $sql = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -350,8 +376,12 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "SELECT * FROM notes WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId . " AND status = 1";
-            $sqlResponse = $this->db->execute($sql);
+            $sql = "SELECT * FROM notes WHERE id = :note_id AND user_id = :user_id AND status = 1";
+            $sqlParams = [
+                ":note_id" => $noteId["decrypted_data"],
+                ":user_id" => $this->userId
+            ];
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;
@@ -359,7 +389,7 @@ session_start();
                 return $this->response;
             }
 
-            $row = $this->db->fetchAll($sql);
+            $row = $this->db->fetchAll($sql, $sqlParams);
 
             if(!$row){
                 $this->response["response_code"] = -1;
@@ -367,9 +397,12 @@ session_start();
                 return $this->response;
             }
 
-            $sql = "UPDATE notes SET status = 0, updated_by = " . $this->userId . " WHERE id = " . $noteId["decrypted_data"] . " AND user_id = " . $this->userId;
-
-            $stmt = $this->db->execute($sql);
+            $sql = "UPDATE notes SET status = 0, updated_by = :user_id WHERE id = :note_id AND user_id = " . $this->userId;
+            $sqlParams = [
+                ":user_id" => $this->userId,
+                ":note_id" => $noteId["decrypted_data"]
+            ];
+            $sqlResponse = $this->db->execute($sql, $sqlParams);
             if($this->db->getResponseCode() != 0){
                 $this->response["response_code"] = -1;
                 $this->response["message"] = $this->defaultErrorMessage;

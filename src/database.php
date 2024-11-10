@@ -70,7 +70,8 @@ class conn{
         try {
             $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
-            $this->response = 0; // Success code
+            $this->response["response_code"] = 0;
+            $this->response["response_message"] = "Success";
             return $stmt;
         }catch(PDOException $e){
             $this->response["response_code"] = $e->getCode();
